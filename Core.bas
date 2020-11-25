@@ -100,7 +100,7 @@ Dim PitY As Long
                Exit For
             End If
          Next PitX
-         If FullRow Then RemoveRow (PitY)
+         If FullRow Then RemoveRow PitY
       Next PitY
    End With
 EndRoutine:
