@@ -22,7 +22,6 @@ Begin VB.Form InterfaceWindow
    ScaleHeight     =   209
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   312
-   ShowInTaskbar   =   0   'False
    StartUpPosition =   2  'CenterScreen
    Begin VB.Timer Dropper 
       Left            =   120
@@ -33,12 +32,12 @@ Begin VB.Form InterfaceWindow
       BackColor       =   &H00000000&
       BorderStyle     =   0  'None
       Height          =   1815
-      Left            =   1800
+      Left            =   840
       ScaleHeight     =   121
       ScaleMode       =   3  'Pixel
       ScaleWidth      =   193
       TabIndex        =   0
-      Top             =   1320
+      Top             =   480
       Width           =   2895
    End
 End
@@ -58,7 +57,7 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
@@ -70,7 +69,7 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
@@ -79,8 +78,8 @@ Private Sub Form_Initialize()
 On Error GoTo ErrorTrap
    PitBox.Left = 0
    PitBox.Top = 48
-   PitBox.Width = PIT_WIDTH * BLOCK_SCALE
-   PitBox.Height = PIT_HEIGHT * BLOCK_SCALE
+   PitBox.Width = PIT_WIDTH * BLOCK_SIZE
+   PitBox.Height = PIT_HEIGHT * BLOCK_SIZE
    
    With App
       Me.Caption = .Title & " v" & .Major & "." & .Minor & .Revision & " - by: " & .CompanyName
@@ -92,7 +91,7 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
@@ -139,7 +138,7 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
@@ -152,7 +151,7 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 

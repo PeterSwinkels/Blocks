@@ -2,7 +2,7 @@ Attribute VB_Name = "CoreModule"
 'This module contains this program's core procedures.
 Option Explicit
 
-'This enum lists the different shapes used.
+'This enumeration lists the different shapes used.
 Public Enum ShapesE
    I    '"I" shape.
    J    '"J" shape.
@@ -42,7 +42,7 @@ Public Type ShapeStr
    Shape As ShapesE              'Defines a shape.
 End Type
 
-Public Const BLOCK_SCALE As Long = 48   'Defines the scale at which the blocks are drawn.
+Public Const BLOCK_SIZE As Long = 48    'Defines a block's size in pixels.
 Public Const PIT_HEIGHT As Long = 16    'Defines the pit's height.
 Public Const PIT_WIDTH As Long = 10     'Defines the pit's width.
 Private Const SHAPE_SIZE As Long = 4     'Defines the maximum number of blocks a shape can have per side.
@@ -50,7 +50,7 @@ Private Const SHAPE_SIZE As Long = 4     'Defines the maximum number of blocks a
 Public ActiveShape As ShapeStr     'Contains the active shape.
 Public GameState As GameStateStr   'Contains the game's state.
 
-'This procedure returns an indicator of whether a shape with the specified map and position can move in the specified direction.
+'This procedure indicates whether the shape with the specified properties can move as specified.
 Public Function CanMove(Map() As Long, x As Long, y As Long, DirectionX As Long, DirectionY As Long) As Boolean
 On Error GoTo ErrorTrap
 Dim BlockX As Long
@@ -80,7 +80,7 @@ EndRoutine:
    Exit Function
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Function
 
@@ -107,27 +107,24 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
-'This procedure checks whether the game has been lost and gives the commands to draw the pit and to display the status information.
+'This procedure checks the game's state (lost/won).
 Private Sub CheckGameState()
 On Error GoTo ErrorTrap
    GameState.Dropper.Enabled = Not GameState.GameOver
    GameState.GameOver = (ActiveShape.PitY < 0)
-
-   DrawPit GameState.PitBox
-   DisplayStatus GameState.Window
 EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
-'This procedure creates and returns an empty pit.
+'This procedure returns an empty pit.
 Public Function CreatePit() As Long()
 On Error GoTo ErrorTrap
 Dim Pit(0 To PIT_WIDTH - 1, 0 To PIT_HEIGHT - 1) As Long
@@ -145,11 +142,11 @@ EndRoutine:
    Exit Function
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Function
 
-'This procedure creates and returns a shape and enables the dropper.
+'This procedure returns a random shape.
 Private Sub CreateShape()
 On Error GoTo ErrorTrap
 
@@ -162,15 +159,29 @@ On Error GoTo ErrorTrap
       .PitX = CLng(Rnd() * ((PIT_WIDTH - 1) - .Dimensions.Width)) - .Dimensions.x
       .PitY = -(.Dimensions.y + .Dimensions.Height)
    End With
-
-   GameState.Dropper.Interval = ActiveShape.DropRate
 EndRoutine:
     Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
+
+'This procedure displays any errors that occur.
+Public Sub DisplayError()
+Dim Description As String
+
+   Description = Err.Description
+   On Error GoTo ErrorTrap
+   If MsgBox(Description, vbOKCancel Or vbExclamation, App.Title) = vbCancel Then End
+EndRoutine:
+   Exit Sub
+
+ErrorTrap:
+   End
+   Resume EndRoutine
+End Sub
+
 
 'This procedure displays the game's status on the specified graphical surface.
 Public Sub DisplayStatus(Window As Form)
@@ -196,26 +207,26 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
-'This procedure draws a block of the specified color at the specified position on the specified graphical surface.
+'This procedure draws a block with the specified properties on the specified graphical surface.
 Private Sub DrawBlock(ColorO As Long, PitX As Long, PitY As Long, PitBox As PictureBox)
 On Error GoTo ErrorTrap
 Dim DrawX As Long
 Dim DrawY As Long
 
-   DrawX = PitX * BLOCK_SCALE
-   DrawY = PitY * BLOCK_SCALE
+   DrawX = PitX * BLOCK_SIZE
+   DrawY = PitY * BLOCK_SIZE
 
-   PitBox.Line (DrawX, DrawY)-Step(BLOCK_SCALE, BLOCK_SCALE), QBColor(ColorO), BF
-   PitBox.Line (DrawX + CLng(BLOCK_SCALE / 10), DrawY + CLng(BLOCK_SCALE / 10))-Step(BLOCK_SCALE - CLng(BLOCK_SCALE / 5), BLOCK_SCALE - CLng(BLOCK_SCALE / 5)), 0, B
+   PitBox.Line (DrawX, DrawY)-Step(BLOCK_SIZE, BLOCK_SIZE), QBColor(ColorO), BF
+   PitBox.Line (DrawX + CLng(BLOCK_SIZE / 10), DrawY + CLng(BLOCK_SIZE / 10))-Step(BLOCK_SIZE - CLng(BLOCK_SIZE / 5), BLOCK_SIZE - CLng(BLOCK_SIZE / 5)), 0, B
 EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
@@ -240,11 +251,11 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
-'This procedure draws/erases the specified shape at the specified position on the specified graphical surface.
+'This procedure draws/erases the active shape.
 Public Sub DrawShape(Optional EraseShape As Boolean = False)
 On Error GoTo ErrorTrap
 Dim BlockX As Long
@@ -271,7 +282,7 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
@@ -288,9 +299,12 @@ On Error GoTo ErrorTrap
          SettleActiveShape
          CheckForFullRows
          CheckGameState
-   
+         DrawPit GameState.PitBox
+         DisplayStatus GameState.Window
+
          If Not GameState.GameOver Then
             CreateShape
+            GameState.Dropper.Interval = ActiveShape.DropRate
             DrawShape
          End If
       End If
@@ -299,7 +313,7 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
@@ -344,11 +358,11 @@ EndRoutine:
    Exit Function
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Function
 
-'This procedure checks the specified shape's colored block positions and returns the rectangular area containing colored blocks.
+'This procedure returns a rectangle indicating the specified shape's size.
 Public Function GetShapeDimensions(Map() As Long) As RectangleStr
 On Error GoTo ErrorTrap
 Dim BlockX As Long
@@ -384,11 +398,11 @@ EndRoutine:
    Exit Function
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Function
 
-'This procedure returns the specified shape's map of colored and empty blocks.
+'This procedure returns the specified shape's block map.
 Private Function GetShapeMap(Shape As ShapesE) As Long()
 On Error GoTo ErrorTrap
 Dim BlockX As Long
@@ -426,24 +440,9 @@ EndRoutine:
    Exit Function
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Function
-
-'This procedure handles any errors that occur.
-Public Sub HandleError()
-Dim Description As String
-
-   Description = Err.Description
-   On Error GoTo ErrorTrap
-   If MsgBox(Description, vbOKCancel Or vbExclamation, App.Title) = vbCancel Then End
-EndRoutine:
-   Exit Sub
-
-ErrorTrap:
-   End
-   Resume EndRoutine
-End Sub
 
 'This procedure initializes the game.
 Public Sub InitializeGame(Window As Form, PitBox As PictureBox, Dropper As Timer)
@@ -460,6 +459,7 @@ On Error GoTo ErrorTrap
       Set .Window = Window
       DrawPit .PitBox
       CreateShape
+      GameState.Dropper.Interval = ActiveShape.DropRate
       .Dropper.Enabled = (Not .GameOver)
    End With
 
@@ -467,7 +467,7 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
@@ -494,11 +494,11 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
-'This procedure settles the active shape in the pit.
+'This procedure settles the active shape inside the pit.
 Private Sub SettleActiveShape()
 On Error GoTo ErrorTrap
 Dim BlockX As Long
@@ -521,7 +521,7 @@ EndRoutine:
    Exit Sub
 
 ErrorTrap:
-   HandleError
+   DisplayError
    Resume EndRoutine
 End Sub
 
